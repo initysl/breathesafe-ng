@@ -1,0 +1,48 @@
+# BreatheSafe NG — Model Parameters
+
+# Forecast horizons (hours ahead)
+forecast_horizons:
+  - 1
+  - 6
+  - 12
+  - 24
+
+# Lag features (hours back to look)
+lag_hours:
+  - 1
+  - 3
+  - 6
+  - 12
+  - 24
+  - 48
+
+# Rolling window sizes (hours)
+rolling_windows:
+  - 6
+  - 12
+  - 24
+
+xgboost:
+  n_estimators: 300
+  max_depth: 6
+  learning_rate: 0.05
+  subsample: 0.8
+  colsample_bytree: 0.8
+  min_child_weight: 3
+  early_stopping_rounds: 30
+  eval_metric: mae
+
+lstm:
+  sequence_length: 48 # 48 hours lookback
+  hidden_size: 128
+  num_layers: 2
+  dropout: 0.2
+  batch_size: 32
+  epochs: 100
+  learning_rate: 0.001
+  patience: 10 # Early stopping patience
+
+# Retraining
+retraining:
+  interval_days: 30
+  min_samples_required: 720 # 30 days * 24 hours

@@ -1,0 +1,34 @@
+# Data fetching
+requests==2.31.0
+httpx==0.27.0
+
+# Data processing
+pandas==2.2.2
+numpy==1.26.4
+
+# Database
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.30
+supabase==2.4.6
+
+# ML
+scikit-learn==1.4.2
+xgboost==2.0.3
+torch==2.12.0+cpu
+shap==0.45.0
+
+# Scheduling
+apscheduler==3.10.4
+
+# Environment
+python-dotenv==1.0.1
+
+# Evapotranspiration (Smart Irrigation - future phase)
+# pyeto==0.1.0
+
+# Logging & monitoring
+loguru==0.7.2
+
+# Utilities
+pyyaml==6.0.1
+pytz==2024.1
