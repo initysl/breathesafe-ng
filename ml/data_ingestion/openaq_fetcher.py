@@ -1,48 +1,124 @@
-import os
 import time
 import requests
 import pandas as pd
 from datetime import datetime, timezone, timedelta
-from dotenv import load_dotenv
 from loguru import logger
 from typing import Optional
 
-load_dotenv()
+from config.settings import OPENAQ_API_KEY, OPENAQ_BASE_URL
 
-OPENAQ_BASE_URL = os.getenv("OPENAQ_BASE_URL", "https://api.openaq.io/v3")
-OPENAQ_API_KEY  = os.getenv("OPENAQ_API_KEY")
 
-HEADERS = {
-    "X-API-Key": OPENAQ_API_KEY,
-    "Accept": "application/json"
-}
+def _openaq_headers() -> dict[str, str]:
+    if not OPENAQ_API_KEY:
+        raise ValueError(
+            "OPENAQ_API_KEY is not configured. Set it in ml/.env or provide "
+            "BREATHESAFE_ML_ENV_FILE."
+        )
+
+    return {
+        "X-API-Key": OPENAQ_API_KEY,
+        "Accept": "application/json",
+    }
+
+
+def _normalize_text(value: str | None) -> str:
+    if not value:
+        return ""
+
+    return " ".join(value.casefold().replace("_", " ").split())
+
+
+def _fetch_country_locations(
+    country_code: str = "NG",
+    limit: int = 100,
+    max_pages: int = 10,
+) -> list[dict]:
+    """Fetch paginated locations for a country using OpenAQ's documented v3 filters."""
+    url = f"{OPENAQ_BASE_URL}/locations"
+    all_locations: list[dict] = []
+
+    for page in range(1, max_pages + 1):
+        params = {
+            "iso": country_code.upper(),
+            "limit": limit,
+            "page": page,
+        }
+        response = requests.get(url, headers=_openaq_headers(), params=params, timeout=15)
+        response.raise_for_status()
+
+        data = response.json()
+        results = data.get("results", [])
+        if not results:
+            break
+
+        all_locations.extend(results)
+
+        found = data.get("meta", {}).get("found")
+        if isinstance(found, int) and len(all_locations) >= found:
+            break
+
+        if len(results) < limit:
+            break
+
+    return all_locations
+
+
+def _location_matches_city(location: dict, city_name: str) -> bool:
+    target = _normalize_text(city_name)
+    locality = _normalize_text(location.get("locality"))
+    station_name = _normalize_text(location.get("name"))
+
+    return any(
+        (
+            candidate == target,
+            candidate.startswith(f"{target} "),
+            candidate.endswith(f" {target}"),
+            f" {target} " in f" {candidate} ",
+        )
+        for candidate in (locality, station_name)
+        if candidate
+    )
 
 # Pollutants we care about
 TARGET_PARAMETERS = ["pm25", "pm10", "no2", "o3", "co", "so2"]
 
 
+def discover_cities(country_code: str = "NG", limit: int = 100, max_pages: int = 10) -> list[str]:
+    """Return distinct OpenAQ localities for a country."""
+    try:
+        locations = _fetch_country_locations(country_code=country_code, limit=limit, max_pages=max_pages)
+        cities = sorted(
+            {
+                locality.strip()
+                for locality in (location.get("locality") for location in locations)
+                if locality
+            }
+        )
+        logger.info(f"Found {len(cities)} OpenAQ localities in {country_code.upper()}")
+        return cities
+    except Exception as e:
+        logger.error(f"Failed to discover cities for {country_code.upper()}: {e}")
+        return []
+
+
 
 # Discover location IDs for Nigerian cities (Run this once to find your real IDs)
-def discover_locations(city_name: str, country_code: str = "NG") -> list[dict]:
+def discover_locations(city_name: str, country_code: str = "NG", limit: int = 100, max_pages: int = 10) -> list[dict]:
     """
     Find OpenAQ location IDs for a city.
     Run this once per city to get real location IDs,
     then hardcode them in cities.yaml.
     """
-    url = f"{OPENAQ_BASE_URL}/locations"
-    params = {
-        "country_id": country_code,
-        "city":       city_name,
-        "limit":      10,
-    }
-
     try:
-        response = requests.get(url, headers=HEADERS, params=params, timeout=15)
-        response.raise_for_status()
-        data = response.json()
-        locations = data.get("results", [])
-        logger.info(f"Found {len(locations)} locations in {city_name}")
-        return locations
+        locations = _fetch_country_locations(country_code=country_code, limit=limit, max_pages=max_pages)
+        matches = [location for location in locations if _location_matches_city(location, city_name)]
+        matches.sort(key=lambda item: (_normalize_text(item.get("locality")), _normalize_text(item.get("name"))))
+
+        logger.info(
+            f"Found {len(matches)} locations for {city_name} in {country_code.upper()} "
+            f"from {len(locations)} country locations"
+        )
+        return matches
     except Exception as e:
         logger.error(f"Failed to discover locations for {city_name}: {e}")
         return []
@@ -55,7 +131,7 @@ def fetch_latest_readings(location_id: int) -> list[dict]:
     url = f"{OPENAQ_BASE_URL}/locations/{location_id}/latest"
 
     try:
-        response = requests.get(url, headers=HEADERS, timeout=15)
+        response = requests.get(url, headers=_openaq_headers(), timeout=15)
         response.raise_for_status()
         data = response.json()
         return data.get("results", [])
@@ -95,7 +171,7 @@ def fetch_historical_readings(
     while True:
         params["page"] = page
         try:
-            response = requests.get(url, headers=HEADERS, params=params, timeout=20)
+            response = requests.get(url, headers=_openaq_headers(), params=params, timeout=20)
             response.raise_for_status()
             data = response.json()
             results = data.get("results", [])

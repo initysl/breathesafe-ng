@@ -1,28 +1,19 @@
 import os
-import sys
 import yaml
 import pandas as pd
 from datetime import datetime, timezone
-from dotenv import load_dotenv
 from loguru import logger
 from apscheduler.schedulers.blocking import BlockingScheduler
-from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 from data_ingestion.openaq_fetcher import fetch_city_readings
 from data_ingestion.weather_fetcher import fetch_all_cities_weather
+from config.supabase_client import supabase
 from preprocessing.cleaner import clean_aqi_data, clean_weather_data
 from preprocessing.feature_engineer import build_features
 
-# Add parent directory to path to resolve apps module
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-
-from apps.api.app.db.database import supabase
-
-load_dotenv()
-
 
 # Load city config
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config", "cities.yaml")
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "config", "cities.yaml")
 
 with open(CONFIG_PATH, "r") as f:
     CONFIG = yaml.safe_load(f)

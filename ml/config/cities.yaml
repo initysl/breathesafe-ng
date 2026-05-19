@@ -1,8 +1,3 @@
-# ─────────────────────────────────────────
-# BreatheSafe NG — Target Cities Config
-# Phase 1: Abuja, Lagos, Kano, Port Harcourt
-# ─────────────────────────────────────────
-
 cities:
   abuja:
     name: Abuja
@@ -13,7 +8,12 @@ cities:
     longitude: 7.3986
     timezone: Africa/Lagos
     openaq_location_ids:
-      - 225753 # Abuja station (update with real IDs from OpenAQ)
+      - 6337607
+      - 6338613
+      - 6337437
+      - 6337608
+      - 6337606
+      - 220715
     industrial_zone: false
     harmattan_risk: high # Oct - Feb
     notes: 'Federal capital. Government presence. NESREA HQ here.'
@@ -27,7 +27,11 @@ cities:
     longitude: 3.3792
     timezone: Africa/Lagos
     openaq_location_ids:
-      - 225754 # Lagos station (update with real IDs from OpenAQ)
+      - 404479
+      - 6286016
+      - 6286022
+      - 6286023
+      - 6286024
     industrial_zone: true
     harmattan_risk: moderate
     notes: 'Highest population. Highest pollution. Major commercial hub.'
@@ -40,8 +44,7 @@ cities:
     latitude: 12.0022
     longitude: 8.5919
     timezone: Africa/Lagos
-    openaq_location_ids:
-      - 225755 # Kano station (update with real IDs from OpenAQ)
+    openaq_location_ids: [] # No stations yet, but high priority for future deployment
     industrial_zone: true
     harmattan_risk: very_high # Most severe harmattan in Nigeria
     notes: 'Worst AQI in the North. Heavy harmattan + industrial activity.'
@@ -54,15 +57,46 @@ cities:
     latitude: 4.8156
     longitude: 7.0498
     timezone: Africa/Lagos
-    openaq_location_ids:
-      - 225756 # PH station (update with real IDs from OpenAQ)
+    openaq_location_ids: [] # No stations yet, but high priority for future deployment
     industrial_zone: true
     harmattan_risk: low # South — less harmattan
     notes: 'Oil industry pollution. Gas flaring unique data signal.'
 
-# ─────────────────────────────────────────
+  ibadan:
+    name: Ibadan
+    state: Oyo
+    country: Nigeria
+    country_code: NG
+    latitude: 7.3776
+    longitude: 3.9470
+    timezone: Africa/Lagos
+    openaq_location_ids:
+      - 6295420
+      - 6299186
+      - 6299190
+      - 6299189
+      - 6299185
+      - 6299188
+      - 6299187
+      - 6299191
+    industrial_zone: false
+    harmattan_risk: moderate
+    notes: 'Largest city in SW Nigeria by area. Dense population, heavy traffic pollution.'
+
+  osogbo:
+    name: Osogbo
+    state: Osun
+    country: Nigeria
+    country_code: NG
+    latitude: 7.7719
+    longitude: 4.5624
+    timezone: Africa/Lagos
+    openaq_location_ids: [] # No stations yet, but good candidate for future deployment
+    industrial_zone: false
+    harmattan_risk: moderate
+    notes: 'Osun state capital. Smaller city but strategically represents SW interior.'
+
 # AQI Thresholds (WHO / EPA Standard)
-# ─────────────────────────────────────────
 aqi_thresholds:
   good:
     min: 0
@@ -106,9 +140,7 @@ aqi_thresholds:
     color: '#7e0023'
     advice: 'Emergency conditions. Stay indoors. Seek medical attention if experiencing symptoms.'
 
-# ─────────────────────────────────────────
 # Pollutants tracked
-# ─────────────────────────────────────────
 pollutants:
   - parameter: pm25
     display_name: PM2.5
@@ -140,9 +172,7 @@ pollutants:
     unit: µg/m³
     who_daily_limit: 40
 
-# ─────────────────────────────────────────
 # Harmattan Season (Oct - Feb, North Nigeria)
-# ─────────────────────────────────────────
 harmattan_season:
   start_month: 10 # October
   end_month: 2 # February

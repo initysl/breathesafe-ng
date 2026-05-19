@@ -1,15 +1,20 @@
-import os
 import math
 import requests
 import pandas as pd
 from datetime import datetime, timezone
-from dotenv import load_dotenv
 from loguru import logger
 
-load_dotenv()
+from config.settings import OPENWEATHER_API_KEY, OPENWEATHER_BASE_URL
 
-OPENWEATHER_BASE_URL = os.getenv("OPENWEATHER_BASE_URL", "https://api.openweathermap.org/data/2.5")
-OPENWEATHER_API_KEY  = os.getenv("OPENWEATHER_API_KEY")
+
+def _require_openweather_api_key() -> str:
+    if not OPENWEATHER_API_KEY:
+        raise ValueError(
+            "OPENWEATHER_API_KEY is not configured. Set it in ml/.env or provide "
+            "BREATHESAFE_ML_ENV_FILE."
+        )
+
+    return OPENWEATHER_API_KEY
 
 
 
@@ -35,7 +40,7 @@ def fetch_current_weather(city_name: str, lat: float, lon: float) -> dict | None
     params = {
         "lat":   lat,
         "lon":   lon,
-        "appid": OPENWEATHER_API_KEY,
+        "appid": _require_openweather_api_key(),
         "units": "metric",    # Celsius, m/s
     }
 
@@ -87,7 +92,7 @@ def fetch_weather_forecast(city_name: str, lat: float, lon: float) -> pd.DataFra
     params = {
         "lat":   lat,
         "lon":   lon,
-        "appid": OPENWEATHER_API_KEY,
+        "appid": _require_openweather_api_key(),
         "units": "metric",
     }
 

@@ -2,3 +2,7 @@
 .env
 *__pycache__/
 apps/api/app/db/schemas.py
+*.egg-info
+dist/
+build/
+*.log

@@ -1,15 +1,10 @@
-import os
-from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from supabase import create_client, Client
 from loguru import logger
 
-load_dotenv()
-
-
 # SQLAlchemy Setup (for raw SQL + ORM)
-DATABASE_URL = os.getenv("DATABASE_URL")
+from app.config import DATABASE_URL, SUPABASE_KEY, SUPABASE_URL
 
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is not set")
@@ -40,8 +35,7 @@ def get_db():
 
 
 # Supabase Client (for realtime + storage)
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")  # Service role for backend
+
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables are required")
