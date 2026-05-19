@@ -2,19 +2,29 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-API_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_ENV_PATH = API_ROOT / ".env"
-ENV_FILE_ENV_VAR = "BREATHESAFE_API_ENV_FILE"
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent.parent.parent / ".env")
 
-env_override = os.getenv(ENV_FILE_ENV_VAR)
-ENV_PATH = Path(env_override).expanduser().resolve() if env_override else DEFAULT_ENV_PATH
+# Supabase
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+DATABASE_URL = os.getenv("DATABASE_URL", "")
 
-if env_override and not ENV_PATH.exists():
-    raise FileNotFoundError(f"{ENV_FILE_ENV_VAR} points to a missing file: {ENV_PATH}")
+# Twilio
+TWILIO_ACCOUNT_SID   = os.getenv("TWILIO_ACCOUNT_SID", "")
+TWILIO_AUTH_TOKEN    = os.getenv("TWILIO_AUTH_TOKEN", "")
+TWILIO_WHATSAPP_FROM = os.getenv("TWILIO_WHATSAPP_FROM", "whatsapp:+14155238886")
+TWILIO_SMS_FROM      = os.getenv("TWILIO_SMS_FROM", "")
 
-if ENV_PATH.exists():
-    load_dotenv(dotenv_path=ENV_PATH, override=False)
+# Email
+SMTP_HOST      = os.getenv("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT      = int(os.getenv("SMTP_PORT", 587))
+SMTP_USER      = os.getenv("SMTP_USER", "")
+SMTP_PASSWORD  = os.getenv("SMTP_PASSWORD", "")
+ALERT_FROM_EMAIL = os.getenv("ALERT_FROM_EMAIL", "")
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-DATABASE_URL = os.getenv("DATABASE_URL")
+# App
+APP_ENV       = os.getenv("APP_ENV", "development")
+IS_PRODUCTION = APP_ENV == "production"
+
+assert SUPABASE_URL, "SUPABASE_URL not set"
+assert SUPABASE_KEY, "SUPABASE_SERVICE_ROLE_KEY not set"
