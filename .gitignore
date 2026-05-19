@@ -1,8 +1,23 @@
-*.venv
+.venv
 .env
-*__pycache__/
-apps/api/app/db/schemas.py
+
+__pycache__/
+*.pyc
+*.pyo
+
 *.egg-info
 dist/
 build/
+
 *.log
+
+# ML Artifacts — models, scalers, metadata
+ml/artifacts/*.pkl
+ml/artifacts/*.json
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
