@@ -125,6 +125,30 @@ def discover_locations(city_name: str, country_code: str = "NG", limit: int = 10
 
 
 
+def fetch_location_sensors(location_id: int) -> dict:
+    """
+    Fetch sensor metadata for a location.
+    Returns a dict mapping sensorsId → parameter name.
+    e.g. {15886622: 'pm25', 15886623: 'pm10'}
+    """
+    url = f"{OPENAQ_BASE_URL}/locations/{location_id}/sensors"
+    try:
+        response = requests.get(url, headers=_openaq_headers(), timeout=15)
+        response.raise_for_status()
+        data = response.json()
+        sensor_map = {}
+        for sensor in data.get("results", []):
+            sensor_id  = sensor["id"]
+            param_name = sensor.get("parameter", {}).get("name", "unknown")
+            sensor_map[sensor_id] = param_name
+        logger.debug(f"Sensor map for location {location_id}: {sensor_map}")
+        return sensor_map
+    except Exception as e:
+        logger.error(f"Failed to fetch sensors for location {location_id}: {e}")
+        return {}
+    
+
+
 # Fetch latest readings for a location
 def fetch_latest_readings(location_id: int) -> list[dict]:
     """Fetch the latest pollutant readings for a specific location ID."""
@@ -195,17 +219,15 @@ def fetch_historical_readings(
 
 
 # Parse raw OpenAQ results → clean DataFrame
-def parse_readings(raw_results: list[dict], city: str) -> pd.DataFrame:
-    """
-    Convert raw OpenAQ API results into a clean DataFrame
-    ready for database insertion.
-    """
+def parse_readings(raw_results: list[dict], city: str, sensor_map: dict | None = None) -> pd.DataFrame:
+    if sensor_map is None:
+        sensor_map = {}
+
     records = []
-
     for result in raw_results:
-        parameter = result.get("parameter", "")
+        sensor_id = result.get("sensorsId")
+        parameter = sensor_map.get(sensor_id, "unknown")
 
-        # Only keep parameters we care about
         if parameter not in TARGET_PARAMETERS:
             continue
 
@@ -213,9 +235,7 @@ def parse_readings(raw_results: list[dict], city: str) -> pd.DataFrame:
         if value is None or value < 0:
             continue
 
-        # Handle different timestamp formats
-        date_info = result.get("date", {})
-        timestamp_str = date_info.get("utc") or result.get("datetime", {}).get("utc")
+        timestamp_str = result.get("datetime", {}).get("utc")
         if not timestamp_str:
             continue
 
@@ -223,9 +243,9 @@ def parse_readings(raw_results: list[dict], city: str) -> pd.DataFrame:
             "city":          city,
             "parameter":     parameter,
             "value":         float(value),
-            "unit":          result.get("unit", "µg/m³"),
+            "unit":          "µg/m³",
             "timestamp_utc": pd.to_datetime(timestamp_str, utc=True),
-            "location_id":   str(result.get("locationId", "")),
+            "location_id":   str(result.get("locationsId", "")),
             "source":        "openaq"
         })
 
@@ -233,10 +253,7 @@ def parse_readings(raw_results: list[dict], city: str) -> pd.DataFrame:
         return pd.DataFrame()
 
     df = pd.DataFrame(records)
-
-    # Drop duplicates
     df = df.drop_duplicates(subset=["city", "parameter", "timestamp_utc", "location_id"])
-
     logger.info(f"Parsed {len(df)} clean readings for {city}")
     return df
 
@@ -244,26 +261,30 @@ def parse_readings(raw_results: list[dict], city: str) -> pd.DataFrame:
 
 # Main fetch function (called by scheduler)
 def fetch_city_readings(city_name: str, location_ids: list[int]) -> pd.DataFrame:
-    """
-    Fetch latest AQI readings for a city across all its monitoring stations.
-    This is the primary function called every hour by the scheduler.
-    """
     all_readings = []
 
     for location_id in location_ids:
         logger.info(f"Fetching readings for {city_name} — location {location_id}")
+
+        # Step 1 — get sensor → parameter map for this location
+        sensor_map = fetch_location_sensors(location_id)
+        if not sensor_map:
+            continue
+
+        # Step 2 — get latest readings
         readings = fetch_latest_readings(location_id)
         if readings:
-            all_readings.extend(readings)
-        time.sleep(0.3)   # Be polite to the API
+            # Attach sensor map to each reading for parsing
+            df = parse_readings(readings, city=city_name.lower(), sensor_map=sensor_map)
+            all_readings.append(df)
+
+        time.sleep(0.3)
 
     if not all_readings:
         logger.warning(f"No readings returned for {city_name}")
         return pd.DataFrame()
 
-    df = parse_readings(all_readings, city=city_name.lower())
-    return df
-
+    return pd.concat(all_readings, ignore_index=True)
 
 
 # Backfill — fetch last N days of data
