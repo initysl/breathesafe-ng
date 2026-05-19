@@ -32,9 +32,18 @@ print(result)
 # Should print temp, humidity, wind etc.
 """
 
+"""
 # Fetch live AQI (after you have real location IDs)
 from data_ingestion.openaq_fetcher import fetch_city_readings
 
 df = fetch_city_readings("ibadan", location_ids=[6295420, 6299186, 6299190, 6299189, 6299185, 6299188, 6299187, 6299191])
 print(df.head())
 print(df["parameter"].unique())
+"""
+
+"""
+from apps.api.app.db.database import check_db_connection
+check_db_connection()
+# Expected: ✅ Database connection healthy
+
+"""
