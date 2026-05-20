@@ -4,7 +4,7 @@ from supabase import create_client, Client
 from loguru import logger
 
 # SQLAlchemy Setup (for raw SQL + ORM)
-from app.config import DATABASE_URL, SUPABASE_KEY, SUPABASE_URL
+from config.settings import DATABASE_URL, SUPABASE_KEY, SUPABASE_URL
 
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is not set")

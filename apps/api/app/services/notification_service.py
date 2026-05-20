@@ -2,7 +2,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from loguru import logger
-from app.config import (
+from config.settings import (
     TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN,
     TWILIO_WHATSAPP_FROM, TWILIO_SMS_FROM,
     SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, ALERT_FROM_EMAIL

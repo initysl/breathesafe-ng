@@ -1,65 +1,102 @@
-import Image from "next/image";
+import Link from 'next/link';
+import { Wind, Bell, BarChart3, MapPin } from 'lucide-react';
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className='min-h-screen bg-gray-950 flex flex-col'>
+      {/* Nav */}
+      <nav className='border-b border-gray-800 px-6 py-4 flex items-center justify-between'>
+        <div className='flex items-center gap-2'>
+          <Wind className='text-green-400 w-6 h-6' />
+          <span className='font-bold text-lg tracking-tight'>
+            BreatheSafe NG
+          </span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <div className='flex items-center gap-4 text-sm text-gray-400'>
+          <Link
+            href='/dashboard'
+            className='hover:text-white transition-colors'
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Dashboard
+          </Link>
+          <Link href='/alerts' className='hover:text-white transition-colors'>
+            Alerts
+          </Link>
+          <Link href='/about' className='hover:text-white transition-colors'>
+            About
+          </Link>
         </div>
-      </main>
-    </div>
+      </nav>
+
+      {/* Hero */}
+      <section className='flex-1 flex flex-col items-center justify-center text-center px-6 py-24 gap-8'>
+        <div className='inline-flex items-center gap-2 bg-green-900/30 border border-green-700/40 rounded-full px-4 py-1.5 text-green-400 text-sm'>
+          <span className='w-2 h-2 bg-green-400 rounded-full aqi-pulse'></span>
+          Live data · 6 Nigerian cities
+        </div>
+
+        <h1 className='text-5xl md:text-7xl font-extrabold tracking-tight max-w-3xl leading-tight'>
+          Know the air <br />
+          <span className='text-green-400'>before you breathe it.</span>
+        </h1>
+
+        <p className='text-gray-400 max-w-xl text-lg leading-relaxed'>
+          Real-time AQI monitoring and 24-hour pollution forecasts for Abuja,
+          Lagos, Kano, Port Harcourt, Ibadan, and Osogbo.
+        </p>
+
+        <div className='flex flex-col sm:flex-row gap-4'>
+          <Link
+            href='/dashboard'
+            className='bg-green-500 hover:bg-green-400 text-black font-semibold px-8 py-3 rounded-xl transition-colors'
+          >
+            View Dashboard
+          </Link>
+          <Link
+            href='/alerts'
+            className='border border-gray-700 hover:border-gray-500 text-white px-8 py-3 rounded-xl transition-colors'
+          >
+            Set Up Alerts
+          </Link>
+        </div>
+      </section>
+
+      {/* Feature Cards */}
+      <section className='grid grid-cols-1 md:grid-cols-3 gap-4 px-6 pb-24 max-w-5xl mx-auto w-full'>
+        {[
+          {
+            icon: <MapPin className='w-5 h-5 text-green-400' />,
+            title: 'Live City Map',
+            desc: 'Color-coded AQI map across all 6 cities updated every hour.',
+          },
+          {
+            icon: <BarChart3 className='w-5 h-5 text-blue-400' />,
+            title: '24-Hour Forecasts',
+            desc: 'ML-powered predictions at 1h, 6h, 12h, and 24h horizons.',
+          },
+          {
+            icon: <Bell className='w-5 h-5 text-yellow-400' />,
+            title: 'WhatsApp Alerts',
+            desc: 'Get notified instantly when air quality turns dangerous.',
+          },
+        ].map((f) => (
+          <div
+            key={f.title}
+            className='bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col gap-3'
+          >
+            <div className='w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center'>
+              {f.icon}
+            </div>
+            <h3 className='font-semibold text-white'>{f.title}</h3>
+            <p className='text-gray-400 text-sm leading-relaxed'>{f.desc}</p>
+          </div>
+        ))}
+      </section>
+
+      {/* Footer */}
+      <footer className='border-t border-gray-800 px-6 py-6 text-center text-gray-600 text-sm'>
+        © {new Date().getFullYear()} BreatheSafe NG · Built for Nigerian cities
+      </footer>
+    </main>
   );
 }

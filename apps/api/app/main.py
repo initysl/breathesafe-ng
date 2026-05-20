@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from loguru import logger
-
 from app.routers import aqi, forecast, alerts, health
 from app.db.database import check_db_connection
 
