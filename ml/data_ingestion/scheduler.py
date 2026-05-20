@@ -25,28 +25,52 @@ INTERVAL_MINUTES = int(os.getenv("SCHEDULER_INTERVAL_MINUTES", 60))
 
 # Save to database (Supabase)
 def save_to_db(df: pd.DataFrame, table: str) -> int:
-    """Save a DataFrame to Supabase. Returns number of records saved."""
     if df.empty:
         return 0
-
     try:
-        # Convert timestamps to ISO string for JSON serialization
         df_copy = df.copy()
+
+        # Convert timestamps to ISO string
         for col in df_copy.select_dtypes(include=["datetime64[ns, UTC]", "datetime64[ns]"]).columns:
             df_copy[col] = df_copy[col].dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-        records = df_copy.where(pd.notna(df_copy), None).to_dict(orient="records")
+        # Convert boolean columns to int (Supabase JSON safe)
+        for col in df_copy.select_dtypes(include=["bool"]).columns:
+            df_copy[col] = df_copy[col].astype(int)
 
-        # Upsert — avoids duplicates on re-runs
-        result = supabase.table(table).upsert(records, on_conflict="city,parameter,timestamp_utc").execute()
+        # Replace ALL NaN/inf with None — critical for JSON serialization
+        import math
+        df_copy = df_copy.astype(object)
+        df_copy = df_copy.where(pd.notna(df_copy), None)
+
+        # Extra pass — catch any remaining float nan/inf
+        def sanitize(val):
+            if val is None:
+                return None
+            if isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
+                return None
+            return val
+
+        records = [
+            {k: sanitize(v) for k, v in row.items()}
+            for row in df_copy.to_dict(orient="records")
+        ]
+
+        conflict_map = {
+            "raw_aqi_readings":   "city,parameter,timestamp_utc,location_id",
+            "raw_weather":        "city,timestamp_utc",
+            "processed_features": "city,timestamp_utc",
+        }
+        conflict_col = conflict_map.get(table, "id")
+
+        supabase.table(table).upsert(records, on_conflict=conflict_col).execute()
         logger.success(f"Saved {len(records)} records to {table}")
         return len(records)
 
     except Exception as e:
         logger.error(f"Failed to save to {table}: {e}")
         return 0
-
-
+    
 def log_pipeline_run(run_type: str, city: str, status: str,
                      records_fetched: int, records_saved: int,
                      error: str | None = None, started_at: datetime | None = None):
